@@ -1,5 +1,5 @@
 <template>
-	<div>
+	<div id="videoComp">
 		<video-comp>
 			
 		</video-comp>
@@ -17,5 +17,7 @@ export default {
 </script>
 
 <style>
-
+	#videoComp {
+		width: 100vw;
+	}
 </style>
