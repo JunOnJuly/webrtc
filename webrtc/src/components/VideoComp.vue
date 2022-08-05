@@ -25,54 +25,39 @@
 				<h1 id="session-title">{{ mySessionId }}</h1>
 			</div>
 			
-			<div id="main-video" class="wrap_cont">
-				
-				<user-video :stream-manager="mainStreamManager"/>
-				
-				<div id="video-container" class="sub_vid">		
-					<user-video :stream-manager='subscribers[0]'/>
-				</div>
+			<main-video-comp :mainStreamManager="mainStreamManager"></main-video-comp>
+			<sub-video-comp v-if="subscribers.length > 0" :subStreamManager="subscribers[0]"></sub-video-comp>
 
-				<div id="tool-bar" @mouseenter="hoverToolbar" @mouseleave="leaveToolbar">
-					<div v-if="this.active" id="tools">
+			<div id="tool-bar" @mouseenter="hoverToolbar" @mouseleave="leaveToolbar">
+				<div v-if="this.active" id="tools">
 
-						<img v-if="this.mute" id="mute_img" src="../assets/mute.png" @click="muteMySound">
-						<img v-else id="unmute_img" src="../assets/unmute.png" @click="unmuteMySound">
+					<img v-if="!this.mute" id="mute_img" src="../assets/mute.png" @click="muteMySound">
+					<img v-else id="unmute_img" src="../assets/unmute.png" @click="unmuteMySound">
 
-						<img id="leaveSession_img" src="../assets/stop_call.png" @click="leaveSession">
+					<img id="leaveSession_img" src="../assets/stop_call.png" @click="leaveSession">
 
-						<img v-if="this.closecamera" id="closecamera_img" src="../assets/opencamera.png" @click="closeCamera">
-						<img v-else id="opencamera_img" src="../assets/closecamera.png" @click="openCamera">
-						
-					</div>
+					<img v-if="this.closecamera" id="closecamera_img" src="../assets/opencamera.png" @click="openCamera">
+					<img v-else id="opencamera_img" src="../assets/closecamera.png" @click="closeCamera">
+					
 				</div>
 			</div>
 
-			<!-- <div id="chat-div">
-
-				<div id="chat-log">
-					<p v-for="(text, index) in chat" :key="index">{{ text }}</p>
-				</div>
-
-				<div id="chat_input">
-					<input v-model="chatText" type="text">
-
-					<img @click="sendMassage" src="../assets/send.png">
-				</div>
-
-			</div> -->
 
 		</div>
 	</div>
+
 </template>
 
 <script>
 import axios from 'axios';
 import { OpenVidu } from 'openvidu-browser';
-import UserVideo from './UserVideo';
+
+import MainVideoComp from './MainVideoComp.vue'
+import SubVideoComp from './SubVideoComp.vue'
 
 axios.defaults.headers.post['Content-Type'] = 'application/json';
 
+// const OPENVIDU_SERVER_URL = "https://13.125.192.199:4443/";
 const OPENVIDU_SERVER_URL = "https://" + location.hostname + ":4443";
 const OPENVIDU_SERVER_SECRET = "MY_SECRET";
 
@@ -80,7 +65,8 @@ export default {
 	name: 'App',
 
 	components: {
-		UserVideo,
+		MainVideoComp,
+		SubVideoComp,
 	},
 
 	data () {
@@ -90,15 +76,13 @@ export default {
 			mainStreamManager: undefined,
 			publisher: undefined,
 			subscribers: [],
-			active: false,
-			mute: true,
-			closecamera: true,
 
 			mySessionId: 'SessionA',
 			myUserName: 'Participant' + Math.floor(Math.random() * 100),
 
-			chat: [],
-			chatText: null,
+			mute: false,
+			closecamera: false,
+      active: false,
 		}
 	},
 
@@ -145,11 +129,11 @@ export default {
 							audioSource: undefined, // The source of audio. If undefined default microphone
 							videoSource: undefined, // The source of video. If undefined default webcam
 							publishAudio: true,  	// Whether you want to start publishing with your audio unmuted or not
-							publishVideo: false,  	// Whether you want to start publishing with your video enabled or not
+							publishVideo: true,  	// Whether you want to start publishing with your video enabled or not
 							resolution: '640x480',  // The resolution of your video
 							frameRate: 30,			// The frame rate of your video
 							insertMode: 'APPEND',	// How the video is inserted in the target element 'video-container'
-							mirror: true       	// Whether to mirror your local video or not
+							mirror: false,       	// Whether to mirror your local video or not
 						});
 
 						this.mainStreamManager = publisher;
@@ -264,12 +248,12 @@ export default {
 		},
 
 		openCamera () {
-			this.publisher.publishVideo(false)
+			this.publisher.publishVideo(true)
 			this.closecamera = !this.closecamera
 		},
 
 		closeCamera () {
-			this.publisher.publishVideo(true)
+			this.publisher.publishVideo(false)
 			this.closecamera = !this.closecamera
 		},
 
@@ -310,9 +294,10 @@ export default {
 		width: 40%;
 	}
 
-	#tool-bar{
+		#tool-bar{
 		position: absolute;
 		bottom: 0;
+		left: 0;
 
 		height: 20%;
 		width: 100%;
@@ -322,7 +307,7 @@ export default {
 		display: flex;
 		justify-content: space-around;
 		background-color: rgba(255, 255, 255, 0.5);
-		height: 100%;
+		height: 50%;
 	}
 	
 	#tools>img{
